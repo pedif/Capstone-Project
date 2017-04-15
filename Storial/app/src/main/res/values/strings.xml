@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Storial</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="unknown">Unknown</string>
+    <string name="title_activity_writing_list">WritingListActivity</string>
+    <string name="home">Home</string>
+    <string name="popular_stories">Popular stories</string>
+    <string name="my_writings">My Writings</string>
+
+    <!-- TODO: Remove or change this placeholder content -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_add_story">Add Story</string>
+    <string name="participate">Others can participate</string>
+</resources>

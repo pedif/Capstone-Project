@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="message_sign_in_cancelled">sign in cancelled</string>
+    <string name="message_no_internet_connection">No internet connection was found</string>
+    <string name="message_unknown_error">Unknown error!</string>
+    <string name="message_unknown_id">Story id is invalid. Please contact support team.</string>
+</resources>
