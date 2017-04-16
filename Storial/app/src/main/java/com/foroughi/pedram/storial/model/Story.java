@@ -104,11 +104,13 @@ public class Story implements Parcelable {
     }
 
 
+    @Exclude
     @Override
     public int describeContents() {
         return 0;
     }
 
+    @Exclude
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(id);
@@ -120,6 +122,7 @@ public class Story implements Parcelable {
         parcel.writeLong(inverseDate);
     }
 
+    @Exclude
     public final Parcelable.Creator<Story> CREATOR = new ClassLoaderCreator<Story>() {
         @Override
         public Story createFromParcel(Parcel parcel, ClassLoader classLoader) {

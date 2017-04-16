@@ -6,12 +6,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".StorialApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:name=".StorialApplication"
         tools:replace=" android:supportsRtl">
         <activity
             android:name=".MainActivity"
@@ -26,8 +26,18 @@
         </activity>
         <activity
             android:name=".StoryActivity"
-            android:screenOrientation="portrait"
-            android:parentActivityName=".MainActivity" />
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" />
+
+        <receiver android:name=".StorialWidget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/storial_widget_info" />
+        </receiver>
     </application>
 
 </manifest>

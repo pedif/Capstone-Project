@@ -140,7 +140,7 @@ public class PopularFragment extends Fragment  {
     }
 
     private void loadDataAtStart() {
-        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).limitToLast(length).addListenerForSingleValueEvent(new ValueEventListener() {
+        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).limitToFirst(length).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 startIndex = startIndex + length;
@@ -168,7 +168,7 @@ public class PopularFragment extends Fragment  {
     }
 
     private void loadDataAtEnd() {
-        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).startAt(lastKey).limitToLast(length).addListenerForSingleValueEvent(new ValueEventListener() {
+        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).startAt(lastKey).limitToFirst(length).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 startIndex = startIndex + length;

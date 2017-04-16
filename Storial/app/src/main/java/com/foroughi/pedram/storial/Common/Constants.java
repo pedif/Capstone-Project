@@ -6,9 +6,9 @@ package com.foroughi.pedram.storial.Common;
 
 public interface Constants {
 
-      String EXTRA_STORY_ID = "story_id";
-       String STATE_LAYOUT_MANAGER = "layout_manager";
-       String STATE_DATA = "data";
-       String STATE_POSITION = "scroll_position";
+    String EXTRA_STORY_ID = "story_id";
+    String STATE_LAYOUT_MANAGER = "layout_manager";
+    String STATE_DATA = "data";
+    String STATE_POSITION = "scroll_position";
 
 }

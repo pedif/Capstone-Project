@@ -16,4 +16,6 @@
     <string name="title_add_story">Add Story</string>
     <string name="participate">Others can participate</string>
     <string name="story_title">Story title</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
 </resources>

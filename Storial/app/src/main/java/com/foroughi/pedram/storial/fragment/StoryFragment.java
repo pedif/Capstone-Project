@@ -121,15 +121,17 @@ public class StoryFragment extends Fragment implements ValueEventListener, View.
     public void onClick(View view) {
 
         if(view.getId()==R.id.story_btn_send){
-            if(!TextUtils.isEmpty(et_text.getText())){
                 String delimiter = " ";
                 if(story.getContent().length()==0)
                     delimiter  = "";
+                String endChar = ".";
+            if(TextUtils.isEmpty(et_text.getText()))
+                endChar ="";
 
-                story.setContent(story.getContent()+delimiter+et_text.getText().toString()+".");
+                story.setContent(story.getContent()+delimiter+et_text.getText().toString()+endChar);
                 dbRef.setValue(story);
                 et_text.setText("");
-            }
+
         }else{
             PopupMenu popup = new PopupMenu(getActivity(), view);
             MenuInflater inflater = popup.getMenuInflater();

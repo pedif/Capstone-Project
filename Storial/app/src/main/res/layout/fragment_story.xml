@@ -40,7 +40,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/padding_large"
                 android:layout_marginRight="@dimen/padding_large"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:maxLength="140"/>
 
             <ImageButton
                 android:id="@+id/story_btn_send"
