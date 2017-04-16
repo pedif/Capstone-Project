@@ -7,11 +7,12 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/dlg_et"/>
+        android:id="@+id/dlg_et"
+        android:hint="@string/story_title"/>
     <CheckBox
         android:layout_marginTop="@dimen/fab_margin"
         android:id="@+id/dlg_cb"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:content="@string/participate"/>
+        android:text="@string/participate"/>
 </LinearLayout>

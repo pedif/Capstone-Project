@@ -24,6 +24,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.Date;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -41,7 +43,7 @@ public class AddStoryDialogFragment extends DialogFragment {
     @BindView(R.id.dlg_cb)
     CheckBox cb;
 
-    public static AddStoryDialogFragment newInstance(){
+    public static AddStoryDialogFragment newInstance() {
         return new AddStoryDialogFragment();
     }
 
@@ -54,10 +56,10 @@ public class AddStoryDialogFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         View rootView = View.inflate(getActivity(), R.layout.dialog_add_story, null);
-        ButterKnife.bind(this,rootView);
+        ButterKnife.bind(this, rootView);
 
         et.requestFocus();
-        InputMethodManager mgr = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        InputMethodManager mgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         mgr.showSoftInput(et, InputMethodManager.SHOW_IMPLICIT);
 
         builder.setTitle(getString(R.string.title_add_story));
@@ -69,9 +71,13 @@ public class AddStoryDialogFragment extends DialogFragment {
                     public void onClick(DialogInterface dialog, int id) {
 
                         String email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
-                        if(email==null)
+                        if (email == null)
                             email = "";
-                        dbRef.push().setValue(new Story(et.getText().toString(),email,cb.isChecked(),""));
+                        dbRef.push().setValue(
+                                new Story(et.getText().toString(),
+                                        email, cb.isChecked()
+                                        , ""
+                                        , 0 - new Date().getTime()));
                     }
                 });
 

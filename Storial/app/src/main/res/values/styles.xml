@@ -17,4 +17,13 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="TextAppearance.Storial" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:lineSpacingMultiplier">1.25</item>
+    </style>
+    <style name="TextAppearance.Storial.White" parent="TextAppearance.Storial">
+        <item name="android:textColor">@color/tw__composer_white</item>
+    </style>
+    <style name="TextAppearance.Storial.Black" parent="TextAppearance.Storial">
+        <item name="android:textColor">@color/tw__composer_black</item>
+    </style>
 </resources>

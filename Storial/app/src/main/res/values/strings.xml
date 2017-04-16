@@ -15,4 +15,5 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_add_story">Add Story</string>
     <string name="participate">Others can participate</string>
+    <string name="story_title">Story title</string>
 </resources>

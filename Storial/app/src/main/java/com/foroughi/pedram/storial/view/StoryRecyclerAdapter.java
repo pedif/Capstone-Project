@@ -1,5 +1,6 @@
 package com.foroughi.pedram.storial.view;
 
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +20,10 @@ public class StoryRecyclerAdapter extends RecyclerView.Adapter<StoryRecyclerAdap
 
     private ArrayList<Story> items;
     OnStoryClickedListener listener;
-    public interface OnStoryClickedListener{
+    int currentSelectedIndex;
+    public static String currentSelectedId;
+
+    public interface OnStoryClickedListener {
         void onStorySelected(String id);
     }
 
@@ -28,6 +32,9 @@ public class StoryRecyclerAdapter extends RecyclerView.Adapter<StoryRecyclerAdap
         this.listener = listener;
         if (items == null)
             this.items = new ArrayList<>();
+
+        currentSelectedIndex = -1;
+
     }
 
     @Override
@@ -35,7 +42,7 @@ public class StoryRecyclerAdapter extends RecyclerView.Adapter<StoryRecyclerAdap
 
 
         return new StoryHolder(
-                LayoutInflater.from(parent.getContext()).inflate(R.layout.view_item_story, parent,false));
+                LayoutInflater.from(parent.getContext()).inflate(R.layout.view_item_story, parent, false));
     }
 
     @Override
@@ -49,6 +56,10 @@ public class StoryRecyclerAdapter extends RecyclerView.Adapter<StoryRecyclerAdap
         return items.size();
     }
 
+    public ArrayList<Story> getItems() {
+        return items;
+    }
+
     public void addItems(ArrayList<Story> items) {
         this.items.addAll(items);
         if (this.items.size() == items.size())
@@ -57,32 +68,40 @@ public class StoryRecyclerAdapter extends RecyclerView.Adapter<StoryRecyclerAdap
             notifyItemRangeInserted(this.items.size() - items.size(), items.size());
     }
 
-    public void setItems(ArrayList<Story> items){
+    public void setItems(ArrayList<Story> items) {
         this.items = items;
         notifyDataSetChanged();
     }
 
     public void addItem(Story item) {
-        this.items.add(0,item);
-        if (this.items.size()==1)
+        this.items.add(0, item);
+        if (this.items.size() == 1)
             notifyDataSetChanged();
         else
             notifyItemInserted(0);
     }
 
-    public class StoryHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class StoryHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView tv_title;
         TextView tv_content;
 
-        public StoryHolder(View itemView) {
+        StoryHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
             tv_title = (TextView) itemView.findViewById(R.id.story_tv_title);
             tv_content = (TextView) itemView.findViewById(R.id.story_tv_content);
         }
 
-        public void bind(int position) {
+        void bind(int position) {
+
+            if (currentSelectedIndex != position)
+                itemView.setSelected(false);
+
+            if(currentSelectedId !=null && currentSelectedId.equals(items.get(position).getId())) {
+                itemView.setSelected(true);
+                currentSelectedIndex = position;
+            }
 
             tv_title.setText(items.get(position).getTitle());
             tv_content.setText(items.get(position).getContent());
@@ -90,7 +109,17 @@ public class StoryRecyclerAdapter extends RecyclerView.Adapter<StoryRecyclerAdap
 
         @Override
         public void onClick(View view) {
-            listener.onStorySelected(items.get(getAdapterPosition()).getId());
+
+            if (currentSelectedIndex == getAdapterPosition())
+                return;
+
+            currentSelectedId = items.get(getAdapterPosition()).getId();
+            listener.onStorySelected(currentSelectedId);
+            itemView.setSelected(true);
+            int oldSelected = currentSelectedIndex;
+            currentSelectedIndex = getAdapterPosition();
+            notifyItemChanged(oldSelected);
+
         }
     }
 }

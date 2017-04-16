@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.foroughi.pedram.storial.Common.Constants;
+import com.foroughi.pedram.storial.Common.FirebaseConstants;
 import com.foroughi.pedram.storial.R;
 import com.foroughi.pedram.storial.StoryActivity;
 import com.foroughi.pedram.storial.dialog.AddStoryDialogFragment;
@@ -33,10 +34,14 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static com.foroughi.pedram.storial.Common.Constants.STATE_DATA;
+import static com.foroughi.pedram.storial.Common.Constants.STATE_LAYOUT_MANAGER;
+import static com.foroughi.pedram.storial.Common.Constants.STATE_POSITION;
+
 /**
  * A simple {@link Fragment} subclass.
  */
-public class WritingFragment extends Fragment implements StoryRecyclerAdapter.OnStoryClickedListener {
+public class WritingFragment extends Fragment {
 
     private static final String DIALOG_TAG = "dialog";
     @BindView(R.id.list)
@@ -48,12 +53,9 @@ public class WritingFragment extends Fragment implements StoryRecyclerAdapter.On
 
     DatabaseReference dbRef;
     StoryRecyclerAdapter adapter;
-    private int startIndex = 0;
-    private int length = 10;
-    private String lastKey;
-    int total = 0;
-    private boolean loading = false;
     String email;
+
+    StoryRecyclerAdapter.OnStoryClickedListener listener;
 
     public WritingFragment() {
         // Required empty public constructor
@@ -62,8 +64,9 @@ public class WritingFragment extends Fragment implements StoryRecyclerAdapter.On
     /**
      * @return A new instance of fragment HomeFragment.
      */
-    public static WritingFragment newInstance() {
+    public static WritingFragment newInstance(StoryRecyclerAdapter.OnStoryClickedListener listener) {
         WritingFragment fragment = new WritingFragment();
+        fragment.listener = listener;
         return fragment;
     }
 
@@ -80,62 +83,68 @@ public class WritingFragment extends Fragment implements StoryRecyclerAdapter.On
         ButterKnife.bind(this, rootView);
 
 
-        adapter = new StoryRecyclerAdapter(null, this);
+        adapter = new StoryRecyclerAdapter(null, listener);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);
+        recyclerView.setItemAnimator(null);
 
-
-        DividerItemDecoration decoration=new DividerItemDecoration(getActivity(), LinearLayoutManager.VERTICAL);
-        decoration.setDrawable(ContextCompat.getDrawable(getActivity(),R.drawable.divider));
+        DividerItemDecoration decoration = new DividerItemDecoration(getActivity(), LinearLayoutManager.VERTICAL);
+        decoration.setDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.divider));
         recyclerView.addItemDecoration(decoration);
 
-        dbRef = FirebaseDatabase.getInstance().getReference().child("story");
+        dbRef = FirebaseDatabase.getInstance().getReference().child(FirebaseConstants.TABLE_STORY);
 
         email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
 
-        loadDataAtStart();
+        //restore previous state
+        if (savedInstanceState != null) {
+
+            if (savedInstanceState.containsKey(STATE_DATA))
+                adapter.setItems(savedInstanceState.<Story>getParcelableArrayList(STATE_DATA));
+
+            if (savedInstanceState.containsKey(STATE_LAYOUT_MANAGER)) {
+                recyclerView.getLayoutManager()
+                        .onRestoreInstanceState(savedInstanceState.getParcelable(STATE_LAYOUT_MANAGER));
+
+            }
+
+            if (savedInstanceState.containsKey(STATE_POSITION)) {
+                int position = savedInstanceState.getInt(STATE_POSITION);
+                if (position != RecyclerView.NO_POSITION && position < adapter.getItemCount())
+                    recyclerView.scrollToPosition(position);
+            }
+
+        } else {
+            loadDataAtStart();
+        }
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 DialogFragment dialogFragment = AddStoryDialogFragment.newInstance();
-                if(!dialogFragment.isAdded())
-                dialogFragment.show(getFragmentManager(),DIALOG_TAG);
+                if (!dialogFragment.isAdded())
+                    dialogFragment.show(getFragmentManager(), DIALOG_TAG);
             }
         });
 
         return rootView;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        outState.putParcelable(STATE_LAYOUT_MANAGER, recyclerView.getLayoutManager().onSaveInstanceState());
+        outState.putParcelableArrayList(STATE_DATA, adapter.getItems());
+        outState.putInt(STATE_POSITION,
+                ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition());
+        super.onSaveInstanceState(outState);
+    }
 
     private void loadDataAtStart() {
-        if(email==null)
+        if (email == null)
             return;
 
-//        dbRef.orderByChild("author").equalTo(email).addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                startIndex = startIndex + length;
-//                if (dataSnapshot == null)
-//                    return;
-//                ArrayList<Story> items = new ArrayList<Story>();
-//                for (DataSnapshot data : dataSnapshot.getChildren()) {
-//
-//                    items.add(0,data.getValue(Story.class));
-//                    lastKey = data.getKey();
-//                }
-//
-//                adapter.addItems(items);
-//                loading = false;
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
-//
-        dbRef.orderByChild("author").equalTo(email).addChildEventListener(new ChildEventListener() {
+        dbRef.orderByChild(FirebaseConstants.COLUMN_AUTHOR).equalTo(email).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
@@ -167,11 +176,5 @@ public class WritingFragment extends Fragment implements StoryRecyclerAdapter.On
 
     }
 
-    @Override
-    public void onStorySelected(String id) {
-        Intent intent= new Intent(getActivity(), StoryActivity.class);
-        intent.putExtra(Constants.EXTRA_STORY_ID,id);
-        startActivity(intent);
-    }
 
 }

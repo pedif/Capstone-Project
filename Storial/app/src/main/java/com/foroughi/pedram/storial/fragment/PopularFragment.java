@@ -1,7 +1,6 @@
 package com.foroughi.pedram.storial.fragment;
 
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -12,9 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.foroughi.pedram.storial.Common.Constants;
+import com.foroughi.pedram.storial.Common.FirebaseConstants;
 import com.foroughi.pedram.storial.R;
-import com.foroughi.pedram.storial.StoryActivity;
 import com.foroughi.pedram.storial.model.Story;
 import com.foroughi.pedram.storial.view.StoryRecyclerAdapter;
 import com.google.firebase.database.DataSnapshot;
@@ -28,10 +26,14 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static com.foroughi.pedram.storial.Common.Constants.STATE_DATA;
+import static com.foroughi.pedram.storial.Common.Constants.STATE_LAYOUT_MANAGER;
+import static com.foroughi.pedram.storial.Common.Constants.STATE_POSITION;
+
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PopularFragment extends Fragment implements StoryRecyclerAdapter.OnStoryClickedListener {
+public class PopularFragment extends Fragment  {
 
     @BindView(R.id.list)
     RecyclerView recyclerView;
@@ -40,9 +42,10 @@ public class PopularFragment extends Fragment implements StoryRecyclerAdapter.On
     StoryRecyclerAdapter adapter;
     private int startIndex = 0;
     private int length = 10;
-    private String lastKey;
-    int total = 0;
+    private long lastKey;
     private boolean loading = false;
+
+    StoryRecyclerAdapter.OnStoryClickedListener listener;
 
     public PopularFragment() {
         // Required empty public constructor
@@ -51,8 +54,9 @@ public class PopularFragment extends Fragment implements StoryRecyclerAdapter.On
     /**
      * @return A new instance of fragment HomeFragment.
      */
-    public static PopularFragment newInstance() {
+    public static PopularFragment newInstance(StoryRecyclerAdapter.OnStoryClickedListener listener) {
         PopularFragment fragment = new PopularFragment();
+        fragment.listener = listener;
         return fragment;
     }
 
@@ -68,17 +72,38 @@ public class PopularFragment extends Fragment implements StoryRecyclerAdapter.On
         View rootView = inflater.inflate(R.layout.fragment_recycler, container, false);
         ButterKnife.bind(this, rootView);
 
-        adapter = new StoryRecyclerAdapter(null,this);
+        adapter = new StoryRecyclerAdapter(null,listener);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);
+        recyclerView.setItemAnimator(null);
 
         DividerItemDecoration decoration=new DividerItemDecoration(getActivity(), LinearLayoutManager.VERTICAL);
         decoration.setDrawable(ContextCompat.getDrawable(getActivity(),R.drawable.divider));
         recyclerView.addItemDecoration(decoration);
 
-        dbRef = FirebaseDatabase.getInstance().getReference().child("story");
+        dbRef = FirebaseDatabase.getInstance().getReference().child(FirebaseConstants.TABLE_STORY);
 
-        loadDataAtStart();
+        //restore previous state
+        if (savedInstanceState != null) {
+
+            if (savedInstanceState.containsKey(STATE_DATA))
+                adapter.setItems(savedInstanceState.<Story>getParcelableArrayList(STATE_DATA));
+
+            if (savedInstanceState.containsKey(STATE_LAYOUT_MANAGER)) {
+                recyclerView.getLayoutManager()
+                        .onRestoreInstanceState(savedInstanceState.getParcelable(STATE_LAYOUT_MANAGER));
+
+            }
+
+            if (savedInstanceState.containsKey(STATE_POSITION)) {
+                int position = savedInstanceState.getInt(STATE_POSITION);
+                if (position != RecyclerView.NO_POSITION && position < adapter.getItemCount())
+                    recyclerView.scrollToPosition(position);
+            }
+
+        } else {
+            loadDataAtStart();
+        }
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -104,9 +129,18 @@ public class PopularFragment extends Fragment implements StoryRecyclerAdapter.On
         return rootView;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        outState.putParcelable(STATE_LAYOUT_MANAGER, recyclerView.getLayoutManager().onSaveInstanceState());
+        outState.putParcelableArrayList(STATE_DATA, adapter.getItems());
+        outState.putInt(STATE_POSITION,
+                ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition());
+        super.onSaveInstanceState(outState);
+    }
 
     private void loadDataAtStart() {
-        dbRef.orderByChild("hitCount").limitToFirst(length).addListenerForSingleValueEvent(new ValueEventListener() {
+        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).limitToLast(length).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 startIndex = startIndex + length;
@@ -115,8 +149,10 @@ public class PopularFragment extends Fragment implements StoryRecyclerAdapter.On
                 ArrayList<Story> items = new ArrayList<Story>();
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
 
-                    items.add(data.getValue(Story.class));
-                    lastKey = data.getKey();
+                    Story story = data.getValue(Story.class);
+                    story.setId(data.getKey());
+                    items.add(story);
+                    lastKey = story.getHitCount();
                 }
 
                 adapter.addItems(items);
@@ -132,7 +168,7 @@ public class PopularFragment extends Fragment implements StoryRecyclerAdapter.On
     }
 
     private void loadDataAtEnd() {
-        dbRef.orderByChild("hitCount").startAt(lastKey).limitToFirst(length).addListenerForSingleValueEvent(new ValueEventListener() {
+        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).startAt(lastKey).limitToLast(length).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 startIndex = startIndex + length;
@@ -148,8 +184,10 @@ public class PopularFragment extends Fragment implements StoryRecyclerAdapter.On
                         firstItem = false;
                         continue;
                     }
-                    items.add(data.getValue(Story.class));
-                    lastKey = data.getKey();
+                    Story story = data.getValue(Story.class);
+                    story.setId(data.getKey());
+                    items.add(story);
+                    lastKey = story.getHitCount();
                 }
                 adapter.addItems(items);
                 loading = false;
@@ -162,11 +200,6 @@ public class PopularFragment extends Fragment implements StoryRecyclerAdapter.On
             }
         });
     }
-    @Override
-    public void onStorySelected(String id) {
-        Intent intent= new Intent(getActivity(), StoryActivity.class);
-        intent.putExtra(Constants.EXTRA_STORY_ID,id);
-        startActivity(intent);
-    }
+
 
 }
