@@ -6,8 +6,10 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -30,6 +32,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 /**
+ * Used for creating a new story
  * Created by Pedram on 4/15/2017.
  */
 
@@ -45,6 +48,12 @@ public class AddStoryDialogFragment extends DialogFragment {
 
     public static AddStoryDialogFragment newInstance() {
         return new AddStoryDialogFragment();
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
     }
 
     @NonNull
@@ -70,18 +79,50 @@ public class AddStoryDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
 
-                        String email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
-                        if (email == null)
-                            email = "";
-                        dbRef.push().setValue(
-                                new Story(et.getText().toString(),
-                                        email, cb.isChecked()
-                                        , ""
-                                        , 0 - new Date().getTime()));
                     }
                 });
 
 
         return builder.create();
+
+    }
+
+    @Override
+    public void onStart()
+    {
+        super.onStart();
+
+        /*
+            default action for dialog buttons are to dismiss their dialog after
+            they're done so we need to override the default behaviour
+         */
+        AlertDialog d = (AlertDialog)getDialog();
+        if(d != null)
+        {
+            Button positiveButton = (Button) d.getButton(Dialog.BUTTON_POSITIVE);
+            positiveButton.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    //Dont add a story if no title is set
+                    if (TextUtils.isEmpty(et.getText().toString())) {
+                        Snackbar.make(et, R.string.message_title_empty, Snackbar.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    String email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+                    if (email == null)
+                        email = "";
+                    dbRef.push().setValue(
+                            new Story(et.getText().toString(),
+                                    email, cb.isChecked()
+                                    , ""
+                                    , 0 - new Date().getTime()));
+                    dismiss();
+                    }
+            });
+        }
     }
 }
+

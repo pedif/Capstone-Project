@@ -1,7 +1,6 @@
 package com.foroughi.pedram.storial.fragment;
 
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -12,24 +11,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.foroughi.pedram.storial.Common.Constants;
 import com.foroughi.pedram.storial.Common.FirebaseConstants;
 import com.foroughi.pedram.storial.R;
-import com.foroughi.pedram.storial.StoryActivity;
 import com.foroughi.pedram.storial.model.Story;
 import com.foroughi.pedram.storial.view.StoryRecyclerAdapter;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
-import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;
 
+import static com.foroughi.pedram.storial.Common.Constants.QUERY_LENGTH;
 import static com.foroughi.pedram.storial.Common.Constants.STATE_DATA;
 import static com.foroughi.pedram.storial.Common.Constants.STATE_LAYOUT_MANAGER;
 import static com.foroughi.pedram.storial.Common.Constants.STATE_POSITION;
@@ -37,18 +33,21 @@ import static com.foroughi.pedram.storial.Common.Constants.STATE_POSITION;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class HomeFragment extends Fragment implements StoryRecyclerAdapter.OnStoryClickedListener {
+public class HomeFragment extends BaseListFragment {
 
-    @BindView(R.id.list)
-    RecyclerView recyclerView;
 
-    DatabaseReference dbRef;
-    StoryRecyclerAdapter adapter;
-    private int startIndex = 0;
-    private int length = 10;
+
+    /**
+     * Last item which was retrieved key value( used for firebase where clause)
+     */
     private long lastKey;
+
+    /**
+     * Demonstrate whether a request was sent for new fetching data
+     */
     private boolean loading = false;
-    StoryRecyclerAdapter.OnStoryClickedListener listener;
+
+
 
 
     public HomeFragment() {
@@ -115,6 +114,9 @@ public class HomeFragment extends Fragment implements StoryRecyclerAdapter.OnSto
                 super.onScrolled(recyclerView, dx, dy);
                 if (dy > 0) //check for scroll down
                 {
+                    /*
+                     Decide whether we need to request a new fetch
+                     */
                     LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
                     int visibleItemCount = layoutManager.getChildCount();
                     int totalItemCount = layoutManager.getItemCount();
@@ -144,74 +146,72 @@ public class HomeFragment extends Fragment implements StoryRecyclerAdapter.OnSto
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * Load the first batch of data based on order criteria
+     */
     private void loadDataAtStart() {
-        dbRef.orderByChild(FirebaseConstants.COLUMN_DATE).limitToFirst(length)
+        dbRef.orderByChild(FirebaseConstants.COLUMN_DATE).limitToFirst(QUERY_LENGTH)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                startIndex = startIndex + length;
-                if (dataSnapshot == null)
-                    return;
-                ArrayList<Story> items = new ArrayList<>();
-                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot == null)
+                            return;
+                        ArrayList<Story> items = new ArrayList<>();
+                        for (DataSnapshot data : dataSnapshot.getChildren()) {
 
-                    Story story = data.getValue(Story.class);
-                    story.setId(data.getKey());
-                    items.add(story);
-                    lastKey = story.getInverseDate();
-                }
+                            Story story = data.getValue(Story.class);
+                            story.setId(data.getKey());
+                            items.add(story);
+                            lastKey = story.getInverseDate();
+                        }
 
-                adapter.addItems(items);
-                loading = false;
-            }
+                        adapter.addItems(items);
+                        loading = false;
+                    }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
+                    }
+                });
 
     }
 
+    /**
+     * Load a batch of data starting from {@link #lastKey} based on order criteria
+     */
     private void loadDataAtEnd() {
-        dbRef.orderByChild(FirebaseConstants.COLUMN_DATE).startAt(lastKey).limitToFirst(length)
+        dbRef.orderByChild(FirebaseConstants.COLUMN_DATE).startAt(lastKey).limitToFirst(QUERY_LENGTH)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                startIndex = startIndex + length;
-                if (dataSnapshot == null)
-                    return;
-                ArrayList<Story> items = new ArrayList<>();
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot == null)
+                            return;
+                        ArrayList<Story> items = new ArrayList<>();
                 /*
                     Due to constraints the first item on this list is our last item in the app so we need to ignore it
                  */
-                boolean firstItem = true;
-                for (DataSnapshot data : dataSnapshot.getChildren()) {
-                    if (firstItem) {
-                        firstItem = false;
-                        continue;
+                        boolean firstItem = true;
+                        for (DataSnapshot data : dataSnapshot.getChildren()) {
+                            if (firstItem) {
+                                firstItem = false;
+                                continue;
+                            }
+                            Story story = data.getValue(Story.class);
+                            story.setId(data.getKey());
+                            items.add(story);
+                            lastKey = story.getInverseDate();
+                        }
+                        adapter.addItems(items);
+                        loading = false;
                     }
-                    Story story = data.getValue(Story.class);
-                    story.setId(data.getKey());
-                    items.add(story);
-                    lastKey = story.getInverseDate();
-                }
-                adapter.addItems(items);
-                loading = false;
-            }
 
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
+                    }
+                });
     }
 
-    @Override
-    public void onStorySelected(String id) {
-        Intent intent = new Intent(getActivity(), StoryActivity.class);
-        intent.putExtra(Constants.EXTRA_STORY_ID, id);
-        startActivity(intent);
-    }
 }

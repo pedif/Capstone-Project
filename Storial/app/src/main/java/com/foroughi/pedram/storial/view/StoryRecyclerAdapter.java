@@ -56,6 +56,10 @@ public class StoryRecyclerAdapter extends RecyclerView.Adapter<StoryRecyclerAdap
         return items.size();
     }
 
+    public void setListener(OnStoryClickedListener listener) {
+        this.listener = listener;
+    }
+
     public ArrayList<Story> getItems() {
         return items;
     }

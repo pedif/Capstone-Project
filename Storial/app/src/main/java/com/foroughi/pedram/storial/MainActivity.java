@@ -3,22 +3,19 @@ package com.foroughi.pedram.storial;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.foroughi.pedram.storial.Common.Constants;
+import com.foroughi.pedram.storial.fragment.BaseListFragment;
 import com.foroughi.pedram.storial.fragment.HomeFragment;
 import com.foroughi.pedram.storial.fragment.PopularFragment;
 import com.foroughi.pedram.storial.fragment.StoryFragment;
@@ -29,7 +26,6 @@ import com.squareup.picasso.Picasso;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, StoryRecyclerAdapter.OnStoryClickedListener {
@@ -57,6 +53,10 @@ public class MainActivity extends AppCompatActivity
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.container_frag_1, HomeFragment.newInstance(this), TAG_FRAGMENT)
                     .commit();
+        }else{
+            Fragment f = getSupportFragmentManager().findFragmentByTag(TAG_FRAGMENT);
+            if(f instanceof BaseListFragment)
+                ((BaseListFragment) f).setListener(this);
         }
 
         navigationView.setCheckedItem(R.id.nav_home);

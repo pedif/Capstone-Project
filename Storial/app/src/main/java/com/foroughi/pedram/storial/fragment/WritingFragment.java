@@ -1,7 +1,6 @@
 package com.foroughi.pedram.storial.fragment;
 
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
@@ -14,10 +13,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.foroughi.pedram.storial.Common.Constants;
 import com.foroughi.pedram.storial.Common.FirebaseConstants;
 import com.foroughi.pedram.storial.R;
-import com.foroughi.pedram.storial.StoryActivity;
 import com.foroughi.pedram.storial.dialog.AddStoryDialogFragment;
 import com.foroughi.pedram.storial.model.Story;
 import com.foroughi.pedram.storial.view.StoryRecyclerAdapter;
@@ -25,11 +22,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
-import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -41,19 +34,15 @@ import static com.foroughi.pedram.storial.Common.Constants.STATE_POSITION;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class WritingFragment extends Fragment {
+public class WritingFragment extends BaseListFragment {
 
     private static final String DIALOG_TAG = "dialog";
-    @BindView(R.id.list)
-    RecyclerView recyclerView;
+
 
     @BindView(R.id.fab)
     FloatingActionButton fab;
 
-
-    DatabaseReference dbRef;
-    StoryRecyclerAdapter adapter;
-    String email;
+    String author;
 
     StoryRecyclerAdapter.OnStoryClickedListener listener;
 
@@ -94,7 +83,7 @@ public class WritingFragment extends Fragment {
 
         dbRef = FirebaseDatabase.getInstance().getReference().child(FirebaseConstants.TABLE_STORY);
 
-        email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+        author = FirebaseAuth.getInstance().getCurrentUser().getEmail();
 
         //restore previous state
         if (savedInstanceState != null) {
@@ -140,11 +129,14 @@ public class WritingFragment extends Fragment {
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * Load data based on order criteria and listen for changes
+     */
     private void loadDataAtStart() {
-        if (email == null)
+        if (author == null)
             return;
 
-        dbRef.orderByChild(FirebaseConstants.COLUMN_AUTHOR).equalTo(email).addChildEventListener(new ChildEventListener() {
+        dbRef.orderByChild(FirebaseConstants.COLUMN_AUTHOR).equalTo(author).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 

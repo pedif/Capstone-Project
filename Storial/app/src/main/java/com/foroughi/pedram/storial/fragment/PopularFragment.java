@@ -17,15 +17,14 @@ import com.foroughi.pedram.storial.model.Story;
 import com.foroughi.pedram.storial.view.StoryRecyclerAdapter;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
-import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static com.foroughi.pedram.storial.Common.Constants.QUERY_LENGTH;
 import static com.foroughi.pedram.storial.Common.Constants.STATE_DATA;
 import static com.foroughi.pedram.storial.Common.Constants.STATE_LAYOUT_MANAGER;
 import static com.foroughi.pedram.storial.Common.Constants.STATE_POSITION;
@@ -33,16 +32,18 @@ import static com.foroughi.pedram.storial.Common.Constants.STATE_POSITION;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PopularFragment extends Fragment  {
+public class PopularFragment extends BaseListFragment {
 
-    @BindView(R.id.list)
-    RecyclerView recyclerView;
 
-    DatabaseReference dbRef;
-    StoryRecyclerAdapter adapter;
-    private int startIndex = 0;
-    private int length = 10;
+
+    /**
+     * Last item which was retrieved key value( used for firebase where clause)
+     */
     private long lastKey;
+
+    /**
+     * Demonstrate whether a request was sent for new fetching data
+     */
     private boolean loading = false;
 
     StoryRecyclerAdapter.OnStoryClickedListener listener;
@@ -139,11 +140,14 @@ public class PopularFragment extends Fragment  {
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * Load the first batch of data based on order criteria
+     */
     private void loadDataAtStart() {
-        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).limitToFirst(length).addListenerForSingleValueEvent(new ValueEventListener() {
+        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).limitToFirst(QUERY_LENGTH)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                startIndex = startIndex + length;
                 if (dataSnapshot == null)
                     return;
                 ArrayList<Story> items = new ArrayList<Story>();
@@ -167,11 +171,14 @@ public class PopularFragment extends Fragment  {
 
     }
 
+    /**
+     * Load a batch of data starting from {@link #lastKey} based on order criteria
+     */
     private void loadDataAtEnd() {
-        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).startAt(lastKey).limitToFirst(length).addListenerForSingleValueEvent(new ValueEventListener() {
+        dbRef.orderByChild(FirebaseConstants.COLUMN_HIT_COUNT).startAt(lastKey).limitToFirst(QUERY_LENGTH)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                startIndex = startIndex + length;
                 if (dataSnapshot == null)
                     return;
                 ArrayList<Story> items = new ArrayList<Story>();

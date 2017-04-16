@@ -16,13 +16,12 @@ import android.widget.TextView;
 
 import com.foroughi.pedram.storial.R;
 import com.foroughi.pedram.storial.model.Story;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import org.w3c.dom.Text;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -54,7 +53,11 @@ public class StoryFragment extends Fragment implements ValueEventListener, View.
     @BindView(R.id.story_send_container)
     View view_send_container;
 
+    /**
+     * Keep track of whether a hit was saved for this visit
+     */
     private boolean firstHit;
+    private String author;
 
 
     public StoryFragment() {
@@ -91,6 +94,7 @@ public class StoryFragment extends Fragment implements ValueEventListener, View.
 
         View rootView = inflater.inflate(R.layout.fragment_story, container, false);
         ButterKnife.bind(this, rootView);
+        author = FirebaseAuth.getInstance().getCurrentUser().getEmail();
 
         btn_send.setOnClickListener(this);
         return rootView;
@@ -101,7 +105,7 @@ public class StoryFragment extends Fragment implements ValueEventListener, View.
         story = dataSnapshot.getValue(Story.class);
         tv_content.setText(story.getContent());
         tv_title.setText(story.getTitle());
-        if(!story.isParticipative()){
+        if(!story.isParticipative()&& !story.getAuthor().equals(author)){
             view_send_container.setVisibility(View.GONE);
         }
 
